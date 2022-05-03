@@ -19,14 +19,12 @@ def save_json(json_file, filename):
     with open(filename, 'w') as f:
         json.dump(json_file, f, indent=4, sort_keys=False)
 
-
 def print_network(network, name):
     num_params = 0
     for p in network.parameters():
         num_params += p.numel()
     # print(network)
     print("Number of parameters of %s: %i" % (name, num_params))
-
 
 def he_init(module):
     if isinstance(module, nn.Conv2d):
@@ -38,16 +36,13 @@ def he_init(module):
         if module.bias is not None:
             nn.init.constant_(module.bias, 0)
 
-
 def denormalize(x):
     out = (x + 1) / 2
     return out.clamp_(0, 1)
 
-
 def save_image(x, ncol, filename):
     x = denormalize(x)
     vutils.save_image(x.cpu(), filename, nrow=ncol, padding=0)
-
 
 @torch.no_grad()
 def translate_and_reconstruct(nets, args, x_src, y_src, x_ref, y_ref, filename):
@@ -62,7 +57,6 @@ def translate_and_reconstruct(nets, args, x_src, y_src, x_ref, y_ref, filename):
     x_concat = torch.cat(x_concat, dim=0)
     save_image(x_concat, N, filename)
     del x_concat
-
 
 @torch.no_grad()
 def translate_using_latent(nets, args, x_src, y_trg_list, z_trg_list, psi, filename):
@@ -87,7 +81,6 @@ def translate_using_latent(nets, args, x_src, y_trg_list, z_trg_list, psi, filen
     x_concat = torch.cat(x_concat, dim=0)
     save_image(x_concat, N, filename)
 
-
 @torch.no_grad()
 def translate_using_reference(nets, args, x_src, x_ref, y_ref, filename):
     N, C, H, W = x_src.size()
@@ -106,7 +99,6 @@ def translate_using_reference(nets, args, x_src, x_ref, y_ref, filename):
     x_concat = torch.cat(x_concat, dim=0)
     save_image(x_concat, N+1, filename)
     del x_concat
-
 
 @torch.no_grad()
 def debug_image(nets, args, inputs, step):
@@ -137,14 +129,11 @@ def debug_image(nets, args, inputs, step):
 # Video-related functions #
 # ======================= #
 
-
 def sigmoid(x, w=1):
     return 1. / (1 + np.exp(-w * x))
 
-
 def get_alphas(start=-5, end=5, step=0.5, len_tail=10):
     return [0] + [sigmoid(alpha) for alpha in np.arange(start, end, step)] + [1] * len_tail
-
 
 def interpolate(nets, args, x_src, s_prev, s_next):
     ''' returns T x C x H x W '''
@@ -161,7 +150,6 @@ def interpolate(nets, args, x_src, s_prev, s_next):
         frames.append(frame)
     frames = torch.cat(frames)
     return frames
-
 
 def slide(entries, margin=32):
     """Returns a sliding reference window.
@@ -184,7 +172,6 @@ def slide(entries, margin=32):
         m_bottom = 2 * H - top
         canvas[t, :, top:bottom, :W] = merged[:, :, m_top:m_bottom, :]
     return canvas
-
 
 @torch.no_grad()
 def video_ref(nets, args, x_src, x_ref, y_ref, fname):
@@ -212,7 +199,6 @@ def video_ref(nets, args, x_src, x_ref, y_ref, fname):
         video.append(frames[-1:])
     video = tensor2ndarray255(torch.cat(video))
     save_video(fname, video)
-
 
 @torch.no_grad()
 def video_latent(nets, args, x_src, y_list, z_list, psi, fname):
@@ -248,7 +234,6 @@ def video_latent(nets, args, x_src, y_list, z_list, psi, fname):
     video = tensor2ndarray255(torch.cat(video))
     save_video(fname, video)
 
-
 def save_video(fname, images, output_fps=30, vcodec='libx264', filters=''):
     assert isinstance(images, np.ndarray), "images should be np.array: NHWC"
     num_frames, height, width, channels = images.shape
@@ -262,7 +247,6 @@ def save_video(fname, images, output_fps=30, vcodec='libx264', filters=''):
         process.stdin.write(frame.astype(np.uint8).tobytes())
     process.stdin.close()
     process.wait()
-
 
 def tensor2ndarray255(images):
     images = torch.clamp(images * 0.5 + 0.5, 0, 1)

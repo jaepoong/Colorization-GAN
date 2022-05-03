@@ -54,13 +54,40 @@ class Gray_RGB_dataset(data.Dataset):
         if self.transform is not None:
             img=self.transform(img)
             gray_img=self.transform(gray_img)
-            gray_img=transforms.Grayscale(num_output_channels=3)(gray_img)
-        else:
-            gray_img=transforms.Grayscale(num_output_channels=3)(gray_img)
+        gray_img=transforms.Grayscale(num_output_channels=3)(gray_img)
         return img,gray_img
     
     def __len__(self):
         return len(self.samples)       
+
+def get_gray_train_loader(root,img_size=256,
+                     batch_size=8, prob=0.5, num_workers=4):
+    print('Preparing DataLoader to fetch RGB,Gray images '
+          'during the training phase...' )
+
+    crop = transforms.RandomResizedCrop(
+        img_size, scale=[0.8, 1.0], ratio=[0.9, 1.1])
+    rand_crop = transforms.Lambda(
+        lambda x: crop(x) if random.random() < prob else x)
+
+    transform = transforms.Compose([
+        rand_crop,
+        transforms.Resize([img_size, img_size]),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5, 0.5, 0.5],
+                             std=[0.5, 0.5, 0.5]),
+    ])
+
+    dataset = Gray_RGB_dataset(root, transform)
+
+    sampler = _make_balanced_sampler(dataset.targets)
+    return data.DataLoader(dataset=dataset,
+                           batch_size=batch_size,
+                           sampler=sampler,
+                           num_workers=num_workers,
+                           pin_memory=True,
+                           drop_last=True)
 
 class ReferenceDataset(data.Dataset):
     def __init__(self, root, transform=None):
@@ -178,50 +205,6 @@ def get_test_loader(root, img_size=256, batch_size=32,
                            num_workers=num_workers,
                            pin_memory=True)
 
-def get_train_loader2(root, which='source', img_size=256,
-                     batch_size=8, prob=0.5, num_workers=4):
-    print('Preparing DataLoader to fetch %s images '
-          'during the training phase...' % which)
-
-    crop = transforms.RandomResizedCrop(
-        img_size, scale=[0.8, 1.0], ratio=[0.9, 1.1])
-    rand_crop = transforms.Lambda(
-        lambda x: crop(x) if random.random() < prob else x)
-
-    transform = transforms.Compose([
-        rand_crop,
-        transforms.Resize([img_size, img_size]),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        #transforms.Normalize(mean=[0.5, 0.5, 0.5],
-        #                     std=[0.5, 0.5, 0.5]),
-    ])
-
-    if which == 'source':
-        dataset = Gray_RGB_dataset(root, transform)
-    elif which == 'reference':
-        dataset = ReferenceDataset(root, transform)
-    else:
-        raise NotImplementedError
-
-    return data.DataLoader(dataset=dataset,
-                           batch_size=batch_size,
-                           sampler=None,
-                           num_workers=num_workers,
-                           pin_memory=True,
-                           drop_last=True)
-
-loader=get_train_loader2("../data/afhq")
-'''
-data_=Gray_RGB_dataset("../data/afhq")
-print(len(data_))
-k=0
-for img,grayimg in data_:
-    img.show()
-    grayimg.show()
-    k+=1
-    if k==2:
-        break
 '''
 k=0
 for img,grayimg in loader:
@@ -233,3 +216,4 @@ for img,grayimg in loader:
     grayimg.show()
     if k==1:
         break
+'''
