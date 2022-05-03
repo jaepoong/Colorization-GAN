@@ -13,6 +13,7 @@ from torch.utils.data.sampler import WeightedRandomSampler
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
 import torch.nn as nn
+import copy
 
 def listdir(dname):
     # 해당 경로 하위의 모든 image파일 경로 
@@ -36,6 +37,30 @@ class DefaultDataset(data.Dataset):
 
     def __len__(self):
         return len(self.samples)
+
+class Gray_RGB_dataset(data.Dataset):
+    # return : 이미지,흑백이미지
+    def __init__(self,root,transform=None):
+        self.samples=listdir(root)
+        self.samples.sort()
+        self.transform=transform
+        self.targets=None
+    
+    def __getitem__(self,index):
+        fname=self.samples[index]
+        img=Image.open(fname).convert('RGB')
+        gray_img=copy.deepcopy(img)
+
+        if self.transform is not None:
+            img=self.transform(img)
+            gray_img=self.transform(gray_img)
+            gray_img=transforms.Grayscale(num_output_channels=3)(gray_img)
+        else:
+            gray_img=transforms.Grayscale(num_output_channels=3)(gray_img)
+        return img,gray_img
+    
+    def __len__(self):
+        return len(self.samples)       
 
 class ReferenceDataset(data.Dataset):
     def __init__(self, root, transform=None):
@@ -153,11 +178,58 @@ def get_test_loader(root, img_size=256, batch_size=32,
                            num_workers=num_workers,
                            pin_memory=True)
 
+def get_train_loader2(root, which='source', img_size=256,
+                     batch_size=8, prob=0.5, num_workers=4):
+    print('Preparing DataLoader to fetch %s images '
+          'during the training phase...' % which)
 
-data_=ReferenceDataset("data/afhq")
+    crop = transforms.RandomResizedCrop(
+        img_size, scale=[0.8, 1.0], ratio=[0.9, 1.1])
+    rand_crop = transforms.Lambda(
+        lambda x: crop(x) if random.random() < prob else x)
+
+    transform = transforms.Compose([
+        rand_crop,
+        transforms.Resize([img_size, img_size]),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        #transforms.Normalize(mean=[0.5, 0.5, 0.5],
+        #                     std=[0.5, 0.5, 0.5]),
+    ])
+
+    if which == 'source':
+        dataset = Gray_RGB_dataset(root, transform)
+    elif which == 'reference':
+        dataset = ReferenceDataset(root, transform)
+    else:
+        raise NotImplementedError
+
+    return data.DataLoader(dataset=dataset,
+                           batch_size=batch_size,
+                           sampler=None,
+                           num_workers=num_workers,
+                           pin_memory=True,
+                           drop_last=True)
+
+loader=get_train_loader2("../data/afhq")
+'''
+data_=Gray_RGB_dataset("../data/afhq")
+print(len(data_))
 k=0
-for i in data_:
+for img,grayimg in data_:
+    img.show()
+    grayimg.show()
     k+=1
-    transforms.Grayscale(num_output_channels=3)(i[0]).show()
     if k==2:
+        break
+'''
+k=0
+for img,grayimg in loader:
+    print(len(img))
+    k+=1
+    img=transforms.ToPILImage()(img[0])
+    img.show()
+    grayimg=transforms.ToPILImage()(grayimg[0])
+    grayimg.show()
+    if k==1:
         break
