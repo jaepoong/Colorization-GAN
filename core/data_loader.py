@@ -89,6 +89,25 @@ def get_gray_train_loader(root,img_size=256,
                            pin_memory=True,
                            drop_last=True)
 
+def get_gray_test_loader(root, img_size=256, batch_size=32,
+                    shuffle=True, num_workers=4):
+    # test dataloader생성
+    print('Preparing DataLoader for the generation phase...')
+    transform = transforms.Compose([
+        transforms.Grayscale(num_output_channels=3),
+        transforms.Resize([img_size, img_size]),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5, 0.5, 0.5],
+                             std=[0.5, 0.5, 0.5]),
+    ])
+
+    dataset = DefaultDataset(root, transform)
+    return data.DataLoader(dataset=dataset,
+                           batch_size=batch_size,
+                           shuffle=shuffle,
+                           num_workers=num_workers,
+                           pin_memory=True)
+
 class ReferenceDataset(data.Dataset):
     def __init__(self, root, transform=None):
         self.samples, self.targets = self._make_dataset(root)
