@@ -1,4 +1,4 @@
-mport copy
+import copy
 import math
 
 from munch import Munch
@@ -11,8 +11,9 @@ import torch.nn.functional as F
 
 class ResBlk(nn.Module):
     def __init__(self, dim_in, dim_out, actv=nn.LeakyReLU(0.2),
-                 normalize=False, downsample=False):
+                 normalize=False, downsample=False,use_bias=False):
         super().__init__()
+        self.use_bias=use_bias
         self.actv = actv
         self.normalize = normalize
         self.downsample = downsample
@@ -20,13 +21,13 @@ class ResBlk(nn.Module):
         self._build_weights(dim_in, dim_out)
 
     def _build_weights(self, dim_in, dim_out):
-        self.conv1 = nn.Conv2d(dim_in, dim_in, 3, 1, 1)
+        self.conv1 = nn.Conv2d(dim_in, dim_in, 3, 1, 1,bias=self.use_bias)
         self.conv2 = nn.Conv2d(dim_in, dim_out, 3, 1, 1)
         if self.normalize:
             self.norm1 = nn.InstanceNorm2d(dim_in, affine=True)
             self.norm2 = nn.InstanceNorm2d(dim_in, affine=True)
         if self.learned_sc:
-            self.conv1x1 = nn.Conv2d(dim_in, dim_out, 1, 1, 0, bias=False)
+            self.conv1x1 = nn.Conv2d(dim_in, dim_out, 1, 1, 0, bias=self.use_bias)
 
     def _shortcut(self, x):
         if self.learned_sc:
