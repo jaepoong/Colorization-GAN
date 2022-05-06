@@ -61,7 +61,7 @@ class Gray_RGB_dataset(data.Dataset):
         return len(self.samples)       
 
 def get_gray_train_loader(root,img_size=256,
-                     batch_size=8, prob=0.5, num_workers=4):
+                     batch_size=8, prob=0.5, num_workers=4,shuffle=True):
     print('Preparing DataLoader to fetch RGB,Gray images '
           'during the training phase...' )
 
@@ -77,17 +77,20 @@ def get_gray_train_loader(root,img_size=256,
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5, 0.5, 0.5],
                              std=[0.5, 0.5, 0.5]),
+                
     ])
 
     dataset = Gray_RGB_dataset(root, transform)
 
-    sampler = _make_balanced_sampler(dataset.targets)
     return data.DataLoader(dataset=dataset,
                            batch_size=batch_size,
-                           sampler=sampler,
+                           shuffle=shuffle,
                            num_workers=num_workers,
-                           pin_memory=True,
-                           drop_last=True)
+                           pin_memory=True
+                           )
+    
+loader=get_gray_train_loader("data/afhq")
+
 
 def get_gray_test_loader(root, img_size=256, batch_size=32,
                     shuffle=True, num_workers=4):
@@ -111,7 +114,7 @@ def get_gray_test_loader(root, img_size=256, batch_size=32,
 class ReferenceDataset(data.Dataset):
     def __init__(self, root, transform=None):
         self.samples, self.targets = self._make_dataset(root)
-        self.transform = transform
+        self.transform = transformΩ
 
     def _make_dataset(self, root):
         domains = os.listdir(root)
@@ -224,15 +227,15 @@ def get_test_loader(root, img_size=256, batch_size=32,
                            num_workers=num_workers,
                            pin_memory=True)
 
-'''
-k=0
-for img,grayimg in loader:
-    print(len(img))
-    k+=1
-    img=transforms.ToPILImage()(img[0])
-    img.show()
-    grayimg=transforms.ToPILImage()(grayimg[0])
-    grayimg.show()
-    if k==1:
-        break
-'''
+if __name__=="__main__":
+    k=0
+    loader=get_gray_train_loader("data/afhq")
+    for img,grayimg in loader:
+        print(len(img))
+        k+=1
+        img=transforms.ToPILImage()(img[0])
+        img.show()
+        grayimg=transforms.ToPILImage()(grayimg[0])
+        grayimg.show()
+        if k==1:
+            break

@@ -1,5 +1,5 @@
-from core.Generators import CycleGanGenerator as G
-from core.Discriminator import Discriminator as D
+from core.Generators import CycleGanGenerator
+from core.Discriminator import Discriminator 
 from Gan_train import Gray_GanTrainer
 from config import CycleGANConfig as config
 from core.data_loader import Gray_RGB_dataset,get_gray_train_loader,get_gray_test_loader, get_train_loader
@@ -114,8 +114,8 @@ def main():
 
         print("Creating models...")
 
-        G = G().to(device)
-        F = G().to(device)
+        G = CycleGanGenerator().to(device)
+        F = CycleGanGenerator().to(device)
         G.eval()
         F.eval()
         print('Loading models...')
@@ -145,13 +145,13 @@ def main():
         print("Training...")
 
         print("Loading 2 generators and 2 discriminators")
-        G = G().to(device)
-        F = G().to(device)
-        D_x = D().to(device)
-        D_y = D().to(device)
+        G = CycleGanGenerator().to(device)
+        F = CycleGanGenerator().to(device)
+        D_x = Discriminator().to(device)
+        D_y = Discriminator().to(device)
 
         # load dataloaders
-        photo_images = get_train_loader(root_dir=args.photo_image_dir, batch_size=args.batch_size)
+        photo_images = get_train_loader(root=args.photo_image_dir, batch_size=args.batch_size)
 
         print("Loading Trainer...")
         trainer = Gray_GanTrainer(G, F, D_x, D_y, photo_images, use_initialization=(args.initialization_epochs > 0))
