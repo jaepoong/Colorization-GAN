@@ -59,7 +59,7 @@ class Gray_GanTrainer:
             start = time.time()
             epoch_loss = 0
 
-            for ix,(img,gray_img) in enumerate(self.data_loader,0):
+            for ix,(img,gray_img) in enumerate(self.data_loader):
                 img = img.to(config.device)
                 gray_img = gray_img.to(config.device)
 
@@ -87,7 +87,7 @@ class Gray_GanTrainer:
             epoch_loss_cycle = 0
             epoch_loss_identity = 0
 
-            for ix,(img,gray_img) in enumerate(self.data_loader,0):
+            for ix,(img,gray_img) in enumerate(self.data_loader):
 
                 img = img.to(config.device)
                 gray_img = gray_img.to(config.device)
@@ -96,20 +96,19 @@ class Gray_GanTrainer:
                 loss_D_x, loss_D_y, loss_G_GAN, loss_F_GAN, loss_cycle, loss_identity = self.train_step(img,
                                                                                                         gray_img)
                 # hist
-                self.loss_D_x_hist.append(loss_D_x)
-                self.loss_D_y_hist.append(loss_D_y)
-                self.loss_G_GAN_hist.append(loss_G_GAN)
-                self.loss_F_GAN_hist.append(loss_F_GAN)
-                self.loss_cycle_hist.append(loss_cycle)
-                self.loss_identity_hist.append(loss_identity)
+                self.loss_D_x_hist.append(loss_D_x.detach().item())
+                self.loss_D_y_hist.append(loss_D_y.detach().item())
+                self.loss_G_GAN_hist.append(loss_G_GAN.detach().item())
+                self.loss_F_GAN_hist.append(loss_F_GAN.detach().item())
+                self.loss_cycle_hist.append(loss_cycle.detach().item())
+                self.loss_identity_hist.append(loss_identity.detach().item())
 
-                epoch_loss_D_x += loss_D_x
-                epoch_loss_D_y += loss_D_y
-                epoch_loss_G_GAN += loss_G_GAN
-                epoch_loss_F_GAN += loss_F_GAN
-                epoch_loss_cycle += loss_cycle
-                epoch_loss_identity += loss_identity
-
+                epoch_loss_D_x += loss_D_x.detach().item()
+                epoch_loss_D_y += loss_D_y.detach().item()
+                epoch_loss_G_GAN += loss_G_GAN.detach().item()
+                epoch_loss_F_GAN += loss_F_GAN.detach().item()
+                epoch_loss_cycle += loss_cycle.detach().item()
+                epoch_loss_identity += loss_identity.detach().item()
                 # print progress
                 if (ix + 1) % self.print_every == 0:
                     print("Training Phase Epoch {0} Iteration {1}: loss_D_x: {2:.4f} loss_D_y: {3:.4f} loss_G: {4:.4f} loss_F: {5:.4f} "
@@ -129,10 +128,10 @@ class Gray_GanTrainer:
     def train_step(self, img, gray_img):
         # photo images are X, animation images are Y
 
-        self.D_x.zero_grad()
-        self.D_y.zero_grad()
-        self.G.zero_grad()
-        self.F.zero_grad()
+        self.D_x_optimizer.zero_grad()
+        self.D_y_optimizer.zero_grad()
+        self.G_optimizer.zero_grad()
+        self.F_optimizer.zero_grad()
 
         # Generate images and save them to image buffers
         generated_y = self.G(img)
@@ -176,8 +175,8 @@ class Gray_GanTrainer:
         self.D_x_optimizer.step()
 
         # time to train G and F
-        self.G.zero_grad()
-        self.F.zero_grad()
+        self.G_optimizer.zero_grad()
+        self.F_optimizer.zero_grad()
 
         # 1. GAN loss
         generated_y_output = self.D_y(generated_y)
@@ -196,8 +195,8 @@ class Gray_GanTrainer:
         loss_cycle += self.lambda_cycle * self.Cycle_criterion(cycle_y, gray_img)
 
         # 3. identity loss
-        G_y = self.G(img)
-        F_x = self.F(gray_img)
+        G_y = self.G(gray_img)
+        F_x = self.F(img)
         loss_identity = self.lambda_identity * self.Identity_criterion(G_y, gray_img)
         loss_identity += self.lambda_identity * self.Identity_criterion(F_x, img)
 
@@ -206,14 +205,14 @@ class Gray_GanTrainer:
         self.G_optimizer.step()
         self.F_optimizer.step()
 
-        return loss_D_x.item(), loss_D_y.item(), loss_G_GAN.item(), loss_F_GAN.item(), \
-               loss_cycle.item(), loss_identity.item()
+        return loss_D_x.detach().item(), loss_D_y.detach().item(), loss_G_GAN.detach().item(), loss_F_GAN.detach().item(), \
+               loss_cycle.detach().item(), loss_identity.detach().item()
 
     def initialize_step(self, img, gray_img):
         # TODO
         # Train only using cycle-consistency and identity loss
-        self.G.zero_grad()
-        self.F.zero_grad()
+        self.G_optimizer.zero_grad()
+        self.F_optimizer.zero_grad()
 
         generated_y = self.G(img)
         generated_x = self.F(gray_img)
@@ -234,7 +233,7 @@ class Gray_GanTrainer:
         self.G_optimizer.step()
         self.F_optimizer.step()
 
-        return initialization_loss.item()
+        return initialization_loss.detach().item()
 
     def save_checkpoint(self, checkpoint_path):
         torch.save(

@@ -14,11 +14,9 @@ class CycleGanGenerator(nn.Module):
             nn.InstanceNorm2d(64,affine=True),
             actv,
             nn.Conv2d(64,128,kernel_size=3,stride=2,padding=1,bias=use_bias),
-            nn.Conv2d(128,128,kernel_size=3,stride=1,padding=1,bias=use_bias),
             nn.InstanceNorm2d(128,affine=True),
             actv,
             nn.Conv2d(128,256,kernel_size=3,stride=1,padding=3,bias=use_bias),
-            nn.Conv2d(256,256,kernel_size=3,stride=1,padding=1,bias=use_bias),
             nn.InstanceNorm2d(256,affine=True),
             actv,
         )
@@ -30,12 +28,10 @@ class CycleGanGenerator(nn.Module):
         
         self.up_sampling = nn.Sequential(
             nn.ConvTranspose2d(256, 128, kernel_size=3, stride=2, padding=1, output_padding=1, bias=use_bias),
-            nn.ConvTranspose2d(128, 128, kernel_size=3, stride=1, padding=1, bias=use_bias),
             nn.InstanceNorm2d(128,affine=True),
             actv,
 
             nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding=1, output_padding=1, bias=use_bias),
-            nn.ConvTranspose2d(64, 64, kernel_size=3, stride=1, padding=1, bias=use_bias),
             nn.InstanceNorm2d(64,affine=True),
             actv,
 
@@ -48,3 +44,4 @@ class CycleGanGenerator(nn.Module):
         x=self.res_block(x)
         out=self.up_sampling(x)
         return out
+

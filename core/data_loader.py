@@ -230,7 +230,8 @@ def get_test_loader(root, img_size=256, batch_size=32,
 if __name__=="__main__":
     k=0
     loader=get_gray_train_loader("data/afhq")
-    for img,grayimg in loader:
+    for i,(img,gray_img) in enumerate(loader):
+        #img,grayimg=data_
         print(len(img))
         k+=1
         img=transforms.ToPILImage()(img[0])

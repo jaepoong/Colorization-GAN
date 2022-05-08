@@ -34,7 +34,7 @@ def generate_and_save_images(generator, test_image_loader, save_path):
 
     image_ix = 0
     for test_images, _ in test_image_loader:
-        test_images = test_images.to(Config.device)
+        test_images = test_images.to(config.device)
         generated_images = generator(test_images).detach().cpu()
 
         for i in range(len(generated_images)):
@@ -151,10 +151,9 @@ def main():
         D_y = Discriminator().to(device)
 
         # load dataloaders
-        photo_images = get_train_loader(root=args.photo_image_dir, batch_size=args.batch_size)
+        loader = get_gray_train_loader(root=args.photo_image_dir, batch_size=args.batch_size)
 
-        print("Loading Trainer...")
-        trainer = Gray_GanTrainer(G, F, D_x, D_y, photo_images, use_initialization=(args.initialization_epochs > 0))
+        trainer = Gray_GanTrainer(G, F, D_x, D_y, loader, use_initialization=(args.initialization_epochs > 0))
         if args.model_path:
             trainer.load_checkpoint(args.model_path)
 
