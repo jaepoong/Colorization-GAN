@@ -134,6 +134,7 @@ class Gray_GanTrainer:
         self.F_optimizer.zero_grad()
 
         # Generate images and save them to image buffers
+        print(img.size())
         generated_y = self.G(img)
         self.generated_y_images.save(generated_y.detach())
 

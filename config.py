@@ -3,7 +3,7 @@ import torch
 class CycleGANConfig:
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # dataloader.py
-    batch_size = 6
+    batch_size = 2
     num_workers = 4
     photo_image_dir = "data/afhq/train"
     test_photo_image_dir = "data/test/val"
