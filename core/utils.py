@@ -5,7 +5,7 @@ import glob
 from shutil import copyfile
 
 from tqdm import tqdm
-import ffmpeg
+
 
 import numpy as np
 import torch

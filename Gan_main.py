@@ -1,5 +1,6 @@
-from core.Generators import CycleGanGenerator
-from core.Discriminator import Discriminator 
+import wandb
+from core.Generators import Generator,Generator_Mod
+from core.Discriminator import Discriminator,Discriminator_Mod
 from Gan_train import Gray_GanTrainer
 from config import CycleGANConfig as config
 from core.data_loader import Gray_RGB_dataset,get_gray_train_loader,get_gray_test_loader, get_train_loader
@@ -33,7 +34,7 @@ def generate_and_save_images(generator, test_image_loader, save_path):
     ])
 
     image_ix = 0
-    for test_images, _ in test_image_loader:
+    for test_images in test_image_loader:
         test_images = test_images.to(config.device)
         generated_images = generator(test_images).detach().cpu()
 
@@ -50,6 +51,9 @@ def get_args():
     parser.add_argument('--test',
                         action='store_true',
                         help='Use this argument to test generator and compute FID score')
+    
+    parser.add_argument('__Mod',
+                        default=True)
 
     parser.add_argument('--model_path',
                         help='Path to saved model')
@@ -79,7 +83,7 @@ def get_args():
                         type=int,
                         default=config.num_epochs,
                         help='Number of training epochs')
-    
+
     parser.add_argument("--batch_size",
                         type=int,
                         default=config.batch_size)
@@ -113,11 +117,16 @@ def main():
         print('Testing...')
 
         print("Creating models...")
-
-        G = CycleGanGenerator().to(device)
-        F = CycleGanGenerator().to(device)
-        G.eval()
-        F.eval()
+        if args.Mod:
+            G = Generator_Mod().to(device)
+            F = Generator_Mod().to(device)
+            G.eval()
+            F.eval()
+        else:
+            G=Generator().to(device)
+            F=Generator().to(device)
+            G.eval()
+            F.eval()
         print('Loading models...')
         load_generators(G, F, args.model_path)
 
@@ -126,43 +135,61 @@ def main():
         else:
             generator = F
 
-        test_images = get_gray_test_loader(root_dir=args.test_image_path, batch_size=config.batch_size * 2, shuffle=False)
-
-        image_batch, _ = next(iter(test_images))
+        test_images = get_gray_test_loader(root=args.test_image_path, batch_size=config.batch_size, shuffle=False)
+        print(test_images)
+        image_batch= next(iter(test_images))
         image_batch = image_batch.to(config.device)
 
         new_images = G(image_batch).detach().cpu()
 
-        tvutils.save_image(image_batch, 'test_images.jpg', nrow=4, padding=2, normalize=True, range=(-1, 1))
-        tvutils.save_image(new_images, 'generated_images.jpg', nrow=4, padding=2, normalize=True, range=(-1, 1))
+        tvutils.save_image(image_batch, 'test_images.jpg', nrow=3, padding=2, normalize=True, value_range=(-1, 1))
+        tvutils.save_image(new_images, 'generated_images.jpg', nrow=3, padding=2, normalize=True, value_range=(-1, 1))
 
         if not os.path.isdir('generated_images/CycleGAN'):
             os.makedirs('generated_images/CycleGAN/')
-            
+
         generate_and_save_images(generator, test_images, args.generated_image_save_path)
 
     else:
         print("Training...")
 
         print("Loading 2 generators and 2 discriminators")
-        G = CycleGanGenerator().to(device)
-        F = CycleGanGenerator().to(device)
-        D_x = Discriminator().to(device)
-        D_y = Discriminator().to(device)
+        if args.Mod:
+            G = Generator_Mod().to(device)
+            F = Generator_Mod().to(device)
+            D_x = Discriminator_Mod().to(device)
+            D_y = Discriminator_Mod().to(device)
+        
+        else:
+            G = Generator().to(device)
+            F = Generator().to(device)
+            D_x = Discriminator().to(device)
+            D_y = Discriminator().to(device)            
 
         # load dataloaders
         loader = get_gray_train_loader(root=args.photo_image_dir, batch_size=args.batch_size)
 
-        trainer = Gray_GanTrainer(G, F, D_x, D_y, loader, use_initialization=(args.initialization_epochs > 0))
+        trainer = Gray_GanTrainer(G, F, D_x, D_y, loader, use_initialization=(args.initialization_epochs > 0),
+                                  mod=args.Mod)
         if args.model_path:
             trainer.load_checkpoint(args.model_path)
 
         print('Start Training...')
+
         loss_D_x_hist, loss_D_y_hist, loss_G_GAN_hist, loss_F_GAN_hist, \
         loss_cycle_hist, loss_identity_hist = trainer.train(num_epochs=args.num_epochs,
                                                             initialization_epochs=args.initialization_epochs,
                                                             save_path=args.model_save_path)
+        # 시험용으로 해봄
+        test_images = get_gray_test_loader(root=args.test_image_path, batch_size=config.batch_size, shuffle=False)
+        print(test_images)
+        image_batch= next(iter(test_images))
+        image_batch = image_batch.to(config.device)
 
+        new_images = G(image_batch).detach().cpu()
+
+        tvutils.save_image(image_batch, 'test_images.jpg', nrow=3, padding=2, normalize=True, value_range=(-1, 1))
+        tvutils.save_image(new_images, 'generated_images.jpg', nrow=3, padding=2, normalize=True, value_range=(-1, 1))
 
 if __name__ == '__main__':
     main()

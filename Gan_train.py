@@ -6,16 +6,19 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from config import CycleGANConfig as config
+from tqdm import tqdm
+from core.utils import he_init
 
 class Gray_GanTrainer:
     def __init__(self,G,F,D_x,D_y,data_loader,
                  lambda_cycle=config.lambda_cycle,lambda_identity=config.lambda_identity,
-                 use_initialization=False):
+                 use_initialization=False,mod=True):
         # CycleGan Model
         self.G=G.to(config.device)
         self.F=F.to(config.device)
         self.D_x=D_x.to(config.device)
         self.D_y=D_y.to(config.device)
+        self.mod=mod
         
         # CycleGan optimizer
         self.G_optimizer = optim.Adam(self.G.parameters(), lr=config.lr, betas=(config.adam_beta1, 0.999))
@@ -23,6 +26,8 @@ class Gray_GanTrainer:
         self.D_x_optimizer = optim.Adam(self.D_x.parameters(), lr=config.lr, betas=(config.adam_beta1, 0.999))
         self.D_y_optimizer = optim.Adam(self.D_y.parameters(), lr=config.lr, betas=(config.adam_beta1, 0.999))
         
+        self.lambda_cycle=lambda_cycle
+        self.lambda_identity=lambda_identity
         # dataloader
         self.data_loader=data_loader
 
@@ -38,12 +43,15 @@ class Gray_GanTrainer:
         if use_initialization:
             self.Initialization_criterion = nn.L1Loss().to(config.device)
             self.lambda_initialization = config.content_loss_weight
+            G.apply(he_init)
+            F.apply(he_init)
+            D_x.apply(he_init)
+            D_y.apply(he_init)
         
         self.use_initialization = use_initialization
 
         self.curr_initialization_epoch = 0
         self.curr_epoch = 0
-
         self.init_loss_hist = []
         self.loss_D_x_hist = []
         self.loss_D_y_hist = []
@@ -53,12 +61,12 @@ class Gray_GanTrainer:
         self.loss_identity_hist = []
         self.print_every = config.print_every
 
-    def train(self, num_epochs=config.num_epochs, initialization_epochs=0, save_path="checkpoints/CycleGAN/"):
-    
-        for init_epoch in range(self.curr_initialization_epoch, initialization_epochs):
+    def train(self, num_epochs=config.num_epochs, initialization_epochs=5, save_path="./checkpoints/CycleGAN/"):
+
+        for init_epoch in tqdm(range(self.curr_initialization_epoch, initialization_epochs),desc="init_epochs",mininterval=0.1):
             start = time.time()
             epoch_loss = 0
-
+            
             for ix,(img,gray_img) in enumerate(self.data_loader):
                 img = img.to(config.device)
                 gray_img = gray_img.to(config.device)
@@ -76,9 +84,21 @@ class Gray_GanTrainer:
 
             print("Initialization Phase [{0}/{1}], {2:.4f} seconds".format(init_epoch + 1, initialization_epochs,
                                                                            time.time() - start))
-            self.curr_initialization_epoch += 1
+            self.curr_epoch += 1
+        
+        if self.mod:
+            save_path=save_path+"Mod/"
+        else:
+            save_path=save_path+"Normal/"
+            
+        try:
+            if not os.path.exists(save_path):
+                os.makedirs(save_path)
+        except OSError:
+            print ('Error: Creating directory. ' + save_path)
 
-        for epoch in range(self.curr_epoch, num_epochs):
+
+        for epoch in tqdm(range(self.curr_epoch, num_epochs),desc="epochs",mininterval=0.01):
             start = time.time()
             epoch_loss_D_x = 0
             epoch_loss_D_y = 0
@@ -96,19 +116,20 @@ class Gray_GanTrainer:
                 loss_D_x, loss_D_y, loss_G_GAN, loss_F_GAN, loss_cycle, loss_identity = self.train_step(img,
                                                                                                         gray_img)
                 # hist
-                self.loss_D_x_hist.append(loss_D_x.detach().item())
-                self.loss_D_y_hist.append(loss_D_y.detach().item())
-                self.loss_G_GAN_hist.append(loss_G_GAN.detach().item())
-                self.loss_F_GAN_hist.append(loss_F_GAN.detach().item())
-                self.loss_cycle_hist.append(loss_cycle.detach().item())
-                self.loss_identity_hist.append(loss_identity.detach().item())
+                self.loss_D_x_hist.append(loss_D_x)
+                self.loss_D_y_hist.append(loss_D_y)
+                self.loss_G_GAN_hist.append(loss_G_GAN)
+                self.loss_F_GAN_hist.append(loss_F_GAN)
+                self.loss_cycle_hist.append(loss_cycle)
+                self.loss_identity_hist.append(loss_identity)
 
-                epoch_loss_D_x += loss_D_x.detach().item()
-                epoch_loss_D_y += loss_D_y.detach().item()
-                epoch_loss_G_GAN += loss_G_GAN.detach().item()
-                epoch_loss_F_GAN += loss_F_GAN.detach().item()
-                epoch_loss_cycle += loss_cycle.detach().item()
-                epoch_loss_identity += loss_identity.detach().item()
+                epoch_loss_D_x += loss_D_x
+                epoch_loss_D_y += loss_D_y
+                epoch_loss_G_GAN += loss_G_GAN
+                epoch_loss_F_GAN += loss_F_GAN
+                epoch_loss_cycle += loss_cycle
+                epoch_loss_identity += loss_identity
+
                 # print progress
                 if (ix + 1) % self.print_every == 0:
                     print("Training Phase Epoch {0} Iteration {1}: loss_D_x: {2:.4f} loss_D_y: {3:.4f} loss_G: {4:.4f} loss_F: {5:.4f} "
@@ -117,9 +138,13 @@ class Gray_GanTrainer:
                                                                               epoch_loss_cycle / (ix + 1), epoch_loss_identity / (ix + 1)))  # print progress
 
             self.curr_epoch += 1
+            if(self.curr_epoch%10==0):
+                self.save_checkpoint(os.path.join(save_path, 'checkpoint-epoch-{0}.ckpt'.format(self.curr_epoch)))
             print("Training Phase [{0}/{1}], {2:.4f} seconds".format(self.curr_epoch, num_epochs, time.time() - start))
 
         # Training finished, save checkpoint
+
+            
         self.save_checkpoint(os.path.join(save_path, 'checkpoint-epoch-{0}.ckpt'.format(num_epochs)))
 
         return self.loss_D_x_hist, self.loss_D_y_hist, self.loss_G_GAN_hist, self.loss_F_GAN_hist, \
@@ -134,7 +159,6 @@ class Gray_GanTrainer:
         self.F_optimizer.zero_grad()
 
         # Generate images and save them to image buffers
-        print(img.size())
         generated_y = self.G(img)
         self.generated_y_images.save(generated_y.detach())
 
@@ -214,13 +238,10 @@ class Gray_GanTrainer:
         # Train only using cycle-consistency and identity loss
         self.G_optimizer.zero_grad()
         self.F_optimizer.zero_grad()
-
         generated_y = self.G(img)
         generated_x = self.F(gray_img)
-
         cycle_x = self.F(generated_y)  # X -> Y -> X
         cycle_y = self.G(generated_x)  # Y -> X -> Y
-
         loss_cycle = self.lambda_cycle * self.Cycle_criterion(cycle_x, img)
         loss_cycle += self.lambda_cycle * self.Cycle_criterion(cycle_y, gray_img)
 
