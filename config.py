@@ -6,6 +6,7 @@ class CycleGANConfig:
     batch_size = 6
     num_workers = 4
     photo_image_dir = "data/afhq/train"
+    photo_image_target_dir="data/afhq/train"
     test_photo_image_dir = "data/afhq/val"
 
     # CycleGAN_train.py
@@ -14,7 +15,7 @@ class CycleGANConfig:
 
     adam_beta1 = 0.5  # following dcgan
     lr = 0.0002
-    num_epochs = 10
-    initialization_epochs = 3
-    content_loss_weight = 10
+    num_epochs = 1
+    initialization_epochs = 0
+    content_loss_weight = 5
     print_every = 100

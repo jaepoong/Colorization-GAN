@@ -44,22 +44,22 @@ class Discriminator_Mod(nn.Module):
 
         self.negative_slope = leaky_relu_negative_slope
         self.layers = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1, bias=use_bias),
+            nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1, bias=use_bias), # 256
             nn.LeakyReLU(self.negative_slope, inplace=True),
 
-            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1, bias=use_bias),
+            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1, bias=use_bias), # 
             nn.LeakyReLU(self.negative_slope, inplace=True),
-            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=use_bias),
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=use_bias), 
             nn.BatchNorm2d(64),
             nn.LeakyReLU(self.negative_slope, inplace=True),
 
-            nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1, bias=use_bias),
+            nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1, bias=use_bias), 
             nn.LeakyReLU(self.negative_slope, inplace=True),
-            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1, bias=use_bias),
+            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1, bias=use_bias), 
             nn.BatchNorm2d(128),
             nn.LeakyReLU(self.negative_slope, inplace=True),
 
-            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1, bias=use_bias),
+            nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1, bias=use_bias), 
             nn.BatchNorm2d(256),
             nn.LeakyReLU(self.negative_slope, inplace=True),
 
@@ -70,3 +70,11 @@ class Discriminator_Mod(nn.Module):
     def forward(self, input):
         output = self.layers(input)
         return output
+    
+if __name__=="__main__":
+    from data_loader import get_gray_test_loader
+    dataloader=get_gray_test_loader("./data/afhq")
+    Discriminator_Mod = Discriminator_Mod()
+    for data in dataloader:
+        print(Discriminator_Mod(data).size()) 
+        break

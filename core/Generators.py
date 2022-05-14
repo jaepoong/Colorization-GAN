@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from core.block import ResBlk
 class Generator(nn.Module):
-    def __init__(self,n_res=6,use_bias=False):
+    def __init__(self,n_res=4,use_bias=False):
         super().__init__()
         
         self.n_res=n_res
@@ -46,7 +46,7 @@ class Generator(nn.Module):
         return out
 
 class Generator_Mod(nn.Module):
-    def __init__(self,n_res=6,use_bias=False):
+    def __init__(self,n_res=4,use_bias=False):
         super().__init__()
         
         self.n_res=n_res

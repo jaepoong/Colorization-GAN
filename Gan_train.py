@@ -10,7 +10,7 @@ from tqdm import tqdm
 from core.utils import he_init
 
 class Gray_GanTrainer:
-    def __init__(self,G,F,D_x,D_y,data_loader,
+    def __init__(self,G,F,D_x,D_y,data_loader,target_data_loader,
                  lambda_cycle=config.lambda_cycle,lambda_identity=config.lambda_identity,
                  use_initialization=False,mod=True):
         # CycleGan Model
@@ -30,7 +30,7 @@ class Gray_GanTrainer:
         self.lambda_identity=lambda_identity
         # dataloader
         self.data_loader=data_loader
-
+        self.target_data_loader=target_data_loader
         # pool
         self.generated_x_images = ImagePool(50)
         self.generated_y_images = ImagePool(50)
@@ -67,11 +67,11 @@ class Gray_GanTrainer:
             start = time.time()
             epoch_loss = 0
             
-            for ix,(img,gray_img) in enumerate(self.data_loader):
+            for ix,(img,target_img) in enumerate(zip(self.data_loader,self.target_data_loader)):
                 img = img.to(config.device)
-                gray_img = gray_img.to(config.device)
+                target_img = target_img.to(config.device)
 
-                loss = self.initialize_step(img, gray_img)
+                loss = self.initialize_step(img, target_img)
                 self.init_loss_hist.append(loss)
                 epoch_loss += loss
 
@@ -107,14 +107,14 @@ class Gray_GanTrainer:
             epoch_loss_cycle = 0
             epoch_loss_identity = 0
 
-            for ix,(img,gray_img) in enumerate(self.data_loader):
+            for ix,(img,target_img) in enumerate(zip(self.data_loader,self.target_data_loader)):
 
                 img = img.to(config.device)
-                gray_img = gray_img.to(config.device)
+                target_img = target_img.to(config.device)
                 
                 # step
                 loss_D_x, loss_D_y, loss_G_GAN, loss_F_GAN, loss_cycle, loss_identity = self.train_step(img,
-                                                                                                        gray_img)
+                                                                                                        target_img)
                 # hist
                 self.loss_D_x_hist.append(loss_D_x)
                 self.loss_D_y_hist.append(loss_D_y)
@@ -138,8 +138,6 @@ class Gray_GanTrainer:
                                                                               epoch_loss_cycle / (ix + 1), epoch_loss_identity / (ix + 1)))  # print progress
 
             self.curr_epoch += 1
-            if(self.curr_epoch%10==0):
-                self.save_checkpoint(os.path.join(save_path, 'checkpoint-epoch-{0}.ckpt'.format(self.curr_epoch)))
             print("Training Phase [{0}/{1}], {2:.4f} seconds".format(self.curr_epoch, num_epochs, time.time() - start))
 
         # Training finished, save checkpoint
@@ -150,7 +148,7 @@ class Gray_GanTrainer:
         return self.loss_D_x_hist, self.loss_D_y_hist, self.loss_G_GAN_hist, self.loss_F_GAN_hist, \
                self.loss_cycle_hist, self.loss_identity_hist
 
-    def train_step(self, img, gray_img):
+    def train_step(self, img, target_img):
         # photo images are X, animation images are Y
 
         self.D_x_optimizer.zero_grad()
@@ -162,11 +160,11 @@ class Gray_GanTrainer:
         generated_y = self.G(img)
         self.generated_y_images.save(generated_y.detach())
 
-        generated_x = self.F(gray_img)
+        generated_x = self.F(target_img)
         self.generated_x_images.save(generated_x.detach())
 
         # train D_y with gray_images and generated_y
-        gray_output = self.D_y(gray_img)
+        gray_output = self.D_y(target_img)
         gray_target = torch.ones_like(gray_output)
         loss_animation = self.GAN_criterion(gray_output, gray_target)
         loss_D_y = loss_animation
@@ -217,12 +215,12 @@ class Gray_GanTrainer:
         cycle_y = self.G(generated_x)  # Y -> X -> Y
 
         loss_cycle = self.lambda_cycle * self.Cycle_criterion(cycle_x, img)
-        loss_cycle += self.lambda_cycle * self.Cycle_criterion(cycle_y, gray_img)
+        loss_cycle += self.lambda_cycle * self.Cycle_criterion(cycle_y, target_img)
 
         # 3. identity loss
-        G_y = self.G(gray_img)
+        G_y = self.G(target_img)
         F_x = self.F(img)
-        loss_identity = self.lambda_identity * self.Identity_criterion(G_y, gray_img)
+        loss_identity = self.lambda_identity * self.Identity_criterion(G_y, target_img)
         loss_identity += self.lambda_identity * self.Identity_criterion(F_x, img)
 
         generator_losses = loss_G_GAN + loss_F_GAN + loss_cycle + loss_identity
@@ -233,21 +231,21 @@ class Gray_GanTrainer:
         return loss_D_x.detach().item(), loss_D_y.detach().item(), loss_G_GAN.detach().item(), loss_F_GAN.detach().item(), \
                loss_cycle.detach().item(), loss_identity.detach().item()
 
-    def initialize_step(self, img, gray_img):
+    def initialize_step(self, img, target_img):
         # TODO
         # Train only using cycle-consistency and identity loss
         self.G_optimizer.zero_grad()
         self.F_optimizer.zero_grad()
         generated_y = self.G(img)
-        generated_x = self.F(gray_img)
+        generated_x = self.F(target_img)
         cycle_x = self.F(generated_y)  # X -> Y -> X
         cycle_y = self.G(generated_x)  # Y -> X -> Y
         loss_cycle = self.lambda_cycle * self.Cycle_criterion(cycle_x, img)
-        loss_cycle += self.lambda_cycle * self.Cycle_criterion(cycle_y, gray_img)
+        loss_cycle += self.lambda_cycle * self.Cycle_criterion(cycle_y, target_img)
 
-        G_y = self.G(gray_img)
+        G_y = self.G(target_img)
         F_x = self.F(img)
-        loss_identity = self.lambda_identity * self.Identity_criterion(G_y, gray_img)
+        loss_identity = self.lambda_identity * self.Identity_criterion(G_y, target_img)
         loss_identity += self.lambda_identity * self.Identity_criterion(F_x, img)
 
         initialization_loss = loss_cycle + loss_identity
@@ -319,4 +317,3 @@ class ImagePool:
     def sample(self, sample_size=config.batch_size):
         idxs = np.random.choice(len(self.buffer), sample_size)
         return torch.stack([self.buffer[idx] for idx in idxs])
-

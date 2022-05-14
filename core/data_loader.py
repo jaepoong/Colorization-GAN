@@ -49,18 +49,15 @@ class Gray_RGB_dataset(data.Dataset):
     def __getitem__(self,index):
         fname=self.samples[index]
         img=Image.open(fname).convert('RGB')
-        gray_img=copy.deepcopy(img)
-
+        img=transforms.Grayscale(num_output_channels=3)(img)
         if self.transform is not None:
             img=self.transform(img)
-            gray_img=self.transform(gray_img)
-        gray_img=transforms.Grayscale(num_output_channels=3)(gray_img)
-        return img,gray_img
+        return img
     
     def __len__(self):
         return len(self.samples)       
 
-def get_gray_train_loader(root,img_size=256,
+def get_gray_train_loader(root,target_root,img_size=256,
                      batch_size=8, prob=0.5, num_workers=4,shuffle=True):
     print('Preparing DataLoader to fetch RGB,Gray images '
           'during the training phase...' )
@@ -77,20 +74,24 @@ def get_gray_train_loader(root,img_size=256,
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5, 0.5, 0.5],
                              std=[0.5, 0.5, 0.5]),
-                
     ])
 
-    dataset = Gray_RGB_dataset(root, transform)
-
-    return data.DataLoader(dataset=dataset,
+    dataset = DefaultDataset(root, transform)
+    target_dataset=Gray_RGB_dataset(target_root,transform)
+    loader=data.DataLoader(dataset=dataset,
+                           batch_size=batch_size,
+                           shuffle=shuffle,
+                           num_workers=num_workers,
+                           pin_memory=True
+                           )
+    target_loader=data.DataLoader(dataset=target_dataset,
                            batch_size=batch_size,
                            shuffle=shuffle,
                            num_workers=num_workers,
                            pin_memory=True
                            )
     
-loader=get_gray_train_loader("data/afhq")
-
+    return loader,target_loader
 
 def get_gray_test_loader(root, img_size=256, batch_size=32,
                     shuffle=True, num_workers=4):
@@ -114,7 +115,7 @@ def get_gray_test_loader(root, img_size=256, batch_size=32,
 class ReferenceDataset(data.Dataset):
     def __init__(self, root, transform=None):
         self.samples, self.targets = self._make_dataset(root)
-        self.transform = transformΩ
+        self.transform = transform
 
     def _make_dataset(self, root):
         domains = os.listdir(root)
