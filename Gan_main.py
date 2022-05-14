@@ -125,13 +125,13 @@ def main():
 
         print("Creating models...")
         if args.Mod:
-            G = Generator_Mod(use_bias=args.use_bais).to(device)
-            F = Generator_Mod(use_bias=args.use_bais).to(device)
+            G = Generator_Mod(use_bias=args.use_bias).to(device)
+            F = Generator_Mod(use_bias=args.use_bias).to(device)
             G.eval()
             F.eval()
         else:
-            G=Generator(use_bias=args.use_bais).to(device)
-            F=Generator(use_bias=args.use_bais).to(device)
+            G=Generator(use_bias=args.use_bias).to(device)
+            F=Generator(use_bias=args.use_bias).to(device)
             G.eval()
             F.eval()
         print('Loading models...')
@@ -162,17 +162,18 @@ def main():
 
         print("Loading 2 generators and 2 discriminators")
         print("Modifided Trainiing : ",args.Mod)
+        
         if args.Mod:
-            G = Generator_Mod(use_bias=args.use_bais).to(device)
-            F = Generator_Mod(use_bias=args.use_bais).to(device)
-            D_x = Discriminator_Mod(use_bias=args.use_bais).to(device)
-            D_y = Discriminator_Mod(use_bias=args.use_bais).to(device)
+            G = Generator_Mod(use_bias=args.use_bias).to(device)
+            F = Generator_Mod(use_bias=args.use_bias).to(device)
+            D_x = Discriminator_Mod(use_bias=args.use_bias).to(device)
+            D_y = Discriminator_Mod(use_bias=args.use_bias).to(device)
         
         else:
-            G = Generator(use_bias=args.use_bais).to(device)
-            F = Generator(use_bias=args.use_bais).to(device)
-            D_x = Discriminator(use_bias=args.use_bais).to(device)
-            D_y = Discriminator(use_bias=args.use_bais).to(device)            
+            G = Generator(use_bias=args.use_bias).to(device)
+            F = Generator(use_bias=args.use_bias).to(device)
+            D_x = Discriminator(use_bias=args.use_bias).to(device)
+            D_y = Discriminator(use_bias=args.use_bias).to(device)            
 
         # load dataloaders
         loader,target_loader = get_gray_train_loader(root=args.photo_image_dir,
