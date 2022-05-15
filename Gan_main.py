@@ -43,7 +43,8 @@ def generate_and_save_images(generator, test_image_loader, save_path):
             image = torch_to_image(image)
             image.save(os.path.join(save_path, '{0}.jpg'.format(image_ix)))
             image_ix += 1
-            
+        
+        break
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -97,7 +98,7 @@ def get_args():
                         help='Use this argument to use edge smoothed images in training')
 
     parser.add_argument('--test_animation_to_photo',
-                        action='store_true',
+                        default=False,
                         help='Use this argument to test animation to photo transfer')
 
     parser.add_argument('--load_data_on_ram',

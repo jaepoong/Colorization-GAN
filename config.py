@@ -15,7 +15,7 @@ class CycleGANConfig:
 
     adam_beta1 = 0.5  # following dcgan
     lr = 0.0002
-    num_epochs = 1
-    initialization_epochs = 0
+    num_epochs = 40
+    initialization_epochs = 8
     content_loss_weight = 5
     print_every = 100

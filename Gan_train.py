@@ -34,12 +34,12 @@ class Gray_GanTrainer:
         # pool
         self.generated_x_images = ImagePool(50)
         self.generated_y_images = ImagePool(50)
-                
+
         # criterion
         self.GAN_criterion=nn.MSELoss().to(config.device)
         self.Cycle_criterion=nn.L1Loss().to(config.device)
         self.Identity_criterion=nn.L1Loss().to(config.device)
-        
+
         if use_initialization:
             self.Initialization_criterion = nn.L1Loss().to(config.device)
             self.lambda_initialization = config.content_loss_weight
@@ -47,10 +47,10 @@ class Gray_GanTrainer:
             F.apply(he_init)
             D_x.apply(he_init)
             D_y.apply(he_init)
-        
+
         self.use_initialization = use_initialization
 
-        self.curr_initialization_epoch = 0
+        #self.curr_initialization_epoch = 0
         self.curr_epoch = 0
         self.init_loss_hist = []
         self.loss_D_x_hist = []
@@ -63,7 +63,7 @@ class Gray_GanTrainer:
 
     def train(self, num_epochs=config.num_epochs, initialization_epochs=5, save_path="./checkpoints/CycleGAN/"):
 
-        for init_epoch in tqdm(range(self.curr_initialization_epoch, initialization_epochs),desc="init_epochs",mininterval=0.1):
+        for init_epoch in tqdm(range(self.curr_epoch, initialization_epochs),desc="init_epochs",mininterval=0.1):
             start = time.time()
             epoch_loss = 0
             
@@ -279,6 +279,7 @@ class Gray_GanTrainer:
         )
 
     def load_checkpoint(self, checkpoint_path):
+        
         checkpoint = torch.load(checkpoint_path)
         self.G.load_state_dict(checkpoint['G_state_dict'])
         self.F.load_state_dict(checkpoint['F_state_dict'])

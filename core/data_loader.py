@@ -229,15 +229,12 @@ def get_test_loader(root, img_size=256, batch_size=32,
                            pin_memory=True)
 
 if __name__=="__main__":
-    k=0
-    loader=get_gray_train_loader("data/yourname")
-    for i,(img,gray_img) in enumerate(loader):
-        #img,grayimg=data_
+    loader,target_loader=get_gray_train_loader("data/afhq/train","data/afhq/train")
+    for i,(img,gray_img) in enumerate(zip(loader,target_loader)):
         print(len(img))
-        k+=1
         img=transforms.ToPILImage()(img[0])
         img.show()
         grayimg=transforms.ToPILImage()(gray_img[0])
         grayimg.show()
-        if k==1:
-            break
+        break
+            
