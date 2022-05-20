@@ -43,7 +43,6 @@ def generate_and_save_images(generator, test_image_loader, save_path):
             image = torch_to_image(image)
             image.save(os.path.join(save_path, '{0}.jpg'.format(image_ix)))
             image_ix += 1
-        
         break
 
 def get_args():
@@ -74,7 +73,11 @@ def get_args():
     parser.add_argument('--test_image_path',
                         default=config.test_photo_image_dir,
                         help='Path to test photo images')
-
+    
+    parser.add_argument('--image_test',
+                        default=True,
+                        help="epoch 단위로 이미지 시각화 할거?")
+    
     parser.add_argument('--generated_image_save_path',
                         default='generated_images/CycleGAN/',
                         help='path to save generated images')
@@ -180,8 +183,8 @@ def main():
         loader,target_loader = get_gray_train_loader(root=args.photo_image_dir,
                                        target_root=args.photo_image_target_dir, batch_size=args.batch_size)
 
-        trainer = Gray_GanTrainer(G, F, D_x, D_y, loader,target_loader ,
-                                  use_initialization=(args.initialization_epochs > 0),mod=args.Mod)
+        trainer = Gray_GanTrainer(G, F, D_x, D_y, loader,target_loader ,args.generated_image_save_path,
+                                  use_initialization=(args.initialization_epochs > 0),mod=args.Mod,image_test=args.image_test)
         if args.model_path:
             trainer.load_checkpoint(args.model_path)
 

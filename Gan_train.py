@@ -7,12 +7,14 @@ import torch.nn as nn
 import torch.optim as optim
 from config import CycleGANConfig as config
 from tqdm import tqdm
-from core.utils import he_init
-
+from core.utils import he_init,compute_gradient_penalty
+from torchvision import transforms
+from PIL import Image
 class Gray_GanTrainer:
-    def __init__(self,G,F,D_x,D_y,data_loader,target_data_loader,
+    def __init__(self,G,F,D_x,D_y,data_loader,target_data_loader, generated_image_save_path,
                  lambda_cycle=config.lambda_cycle,lambda_identity=config.lambda_identity,
-                 use_initialization=False,mod=True):
+                 use_initialization=False,mod=True,image_test=True):
+        # generated_image_save_path =
         # CycleGan Model
         self.G=G.to(config.device)
         self.F=F.to(config.device)
@@ -36,6 +38,7 @@ class Gray_GanTrainer:
         self.generated_y_images = ImagePool(50)
 
         # criterion
+            
         self.GAN_criterion=nn.MSELoss().to(config.device)
         self.Cycle_criterion=nn.L1Loss().to(config.device)
         self.Identity_criterion=nn.L1Loss().to(config.device)
@@ -49,7 +52,8 @@ class Gray_GanTrainer:
             D_y.apply(he_init)
 
         self.use_initialization = use_initialization
-
+        self.image_test=image_test
+        self.generated_image_save_path=generated_image_save_path
         #self.curr_initialization_epoch = 0
         self.curr_epoch = 0
         self.init_loss_hist = []
@@ -74,7 +78,9 @@ class Gray_GanTrainer:
                 loss = self.initialize_step(img, target_img)
                 self.init_loss_hist.append(loss)
                 epoch_loss += loss
-
+            
+            if self.image_test:
+                generate_and_save_images(self.G,self.data_loader,self.generated_image_save_path,self.curr_epoch)
                 # print progress
                 if (ix + 1) % self.print_every == 0:
                     print("Initialization Phase Epoch {0} Iteration {1}: Content Loss: {2:.4f}".format(init_epoch + 1,
@@ -111,7 +117,7 @@ class Gray_GanTrainer:
 
                 img = img.to(config.device)
                 target_img = target_img.to(config.device)
-                
+
                 # step
                 loss_D_x, loss_D_y, loss_G_GAN, loss_F_GAN, loss_cycle, loss_identity = self.train_step(img,
                                                                                                         target_img)
@@ -136,13 +142,16 @@ class Gray_GanTrainer:
                           "loss_cycle: {6:.4f} loss_identity: {7:.4f}".format(epoch + 1, ix+1, epoch_loss_D_x / (ix + 1), epoch_loss_D_y / (ix + 1),
                                                                               epoch_loss_G_GAN / (ix + 1), epoch_loss_F_GAN / (ix + 1),
                                                                               epoch_loss_cycle / (ix + 1), epoch_loss_identity / (ix + 1)))  # print progress
-
+            if self.image_test:
+                generate_and_save_images(self.G,self.data_loader,self.generated_image_save_path,self.curr_epoch)
             self.curr_epoch += 1
+            if self.curr_epoch%10==0:
+                self.save_checkpoint(os.path.join(save_path, 'checkpoint-epoch-{0}.ckpt'.format(self.curr_epoch_epochs)))
             print("Training Phase [{0}/{1}], {2:.4f} seconds".format(self.curr_epoch, num_epochs, time.time() - start))
 
         # Training finished, save checkpoint
 
-            
+
         self.save_checkpoint(os.path.join(save_path, 'checkpoint-epoch-{0}.ckpt'.format(num_epochs)))
 
         return self.loss_D_x_hist, self.loss_D_y_hist, self.loss_G_GAN_hist, self.loss_F_GAN_hist, \
@@ -164,9 +173,9 @@ class Gray_GanTrainer:
         self.generated_x_images.save(generated_x.detach())
 
         # train D_y with gray_images and generated_y
-        gray_output = self.D_y(target_img)
-        gray_target = torch.ones_like(gray_output)
-        loss_animation = self.GAN_criterion(gray_output, gray_target)
+        target_output = self.D_y(target_img)
+        target_target = torch.ones_like(target_output)
+        loss_animation = self.GAN_criterion(target_output, target_target)
         loss_D_y = loss_animation
 
         generated_y_sample = self.generated_y_images.sample()
@@ -279,7 +288,7 @@ class Gray_GanTrainer:
         )
 
     def load_checkpoint(self, checkpoint_path):
-        
+        print("loading checkpoint")
         checkpoint = torch.load(checkpoint_path)
         self.G.load_state_dict(checkpoint['G_state_dict'])
         self.F.load_state_dict(checkpoint['F_state_dict'])
@@ -318,3 +327,28 @@ class ImagePool:
     def sample(self, sample_size=config.batch_size):
         idxs = np.random.choice(len(self.buffer), sample_size)
         return torch.stack([self.buffer[idx] for idx in idxs])
+
+def generate_and_save_images(generator, test_image_loader, save_path, epoch):
+    # 이미지 test + 생성으로 저장.
+    generator.eval()
+    torch_to_image = transforms.Compose([
+        transforms.Normalize(mean=(-1, -1, -1), std=(2, 2, 2)),  # [-1, 1] to [0, 1]
+        transforms.ToPILImage()
+    ])
+
+    image_ix = 0
+    for test_images in test_image_loader:
+        test_images = test_images.to(config.device)
+        generated_images = generator(test_images).detach().cpu()
+
+        for i in range(len(generated_images)):
+            test_image=test_images[i]
+            test_image=torch_to_image(test_image)
+            image = generated_images[i]
+            image = torch_to_image(image)
+            new_img=Image.new('RGB',(2*((test_image.size)[0]),(test_image.size)[1]))
+            new_img.paste(test_image,(0,0))
+            new_img.paste(image,((test_image.size)[0],0))
+            new_img.save(os.path.join(save_path, '{0}_{0}.jpg'.format(epoch,image_ix)))
+            image_ix += 1
+        break

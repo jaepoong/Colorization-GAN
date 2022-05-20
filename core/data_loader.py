@@ -76,21 +76,21 @@ def get_gray_train_loader(root,target_root,img_size=256,
                              std=[0.5, 0.5, 0.5]),
     ])
 
-    dataset = DefaultDataset(root, transform)
-    target_dataset=Gray_RGB_dataset(target_root,transform)
+    target_dataset = DefaultDataset(root, transform)
+    dataset=Gray_RGB_dataset(target_root,transform)
     loader=data.DataLoader(dataset=dataset,
                            batch_size=batch_size,
                            shuffle=shuffle,
                            num_workers=num_workers,
                            pin_memory=True
                            )
+    
     target_loader=data.DataLoader(dataset=target_dataset,
                            batch_size=batch_size,
                            shuffle=shuffle,
                            num_workers=num_workers,
                            pin_memory=True
                            )
-    
     return loader,target_loader
 
 def get_gray_test_loader(root, img_size=256, batch_size=32,

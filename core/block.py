@@ -7,9 +7,31 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class Conv(nn.Module):
+    
+    def __init__(self,in_channel,out_channel,use_bias=False,act=nn.ReLU(),inplace=True):
+        super().__init__()
+        self.use_bias=use_bias
+        self.act=act
+        self.inplace=inplace
+        self.in_channel=in_channel
+        self.out_channel=out_channel
+        main=[]
+        main.append(nn.Conv2d(self.in_channel,self.out_channel,kernel_size=3,stride=1,padding=1,bias=self.use_bias))
+        main.append(nn.BatchNorm2d(self.out_channel,affine=True))
+        main.append(nn.ReLU(inplace=self.inplace))
+        main.append(nn.Conv2d(self.out_channel,self.out_channel,kernel_size=3,stride=1,padding=1,bias=self.use_bias))
+        main.append(nn.BatchNorm2d(self.out_channel,affine=True))
+        main.append(nn.ReLU(inplace=self.in_channel))
+        self.main = nn.Sequential(*main)
+    
+    def forward(self,input):
+        return self.main(input)
+
 
 
 class ResBlk(nn.Module):
+    
     def __init__(self, dim_in, dim_out,
                  normalize=True, downsample=False,use_bias=False,act=nn.LeakyReLU(0.2,inplace=True)):
         super().__init__()
