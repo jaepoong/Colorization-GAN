@@ -3,7 +3,7 @@ from core.Generators import Generator,Generator_Mod
 from core.Discriminator import Discriminator,Discriminator_Mod
 from Gan_train import Gray_GanTrainer
 from config import CycleGANConfig as config
-from core.data_loader import Gray_RGB_dataset,get_gray_train_loader,get_gray_test_loader, get_train_loader
+from core.data_loader import Gray_RGB_dataset,get_gray_train_loader,get_gray_test_loader, get_train_loader,get_test_loader
 
 import torch
 import argparse
@@ -51,6 +51,9 @@ def get_args():
     parser.add_argument('--test',
                         action='store_true',
                         help='Use this argument to test generator and compute FID score')
+    parser.add_argument('--cartoonizing',
+                        default=config.cartoonizing,
+                        help="if use cartoonizing make it true")
     
     parser.add_argument('--Mod',
                         default=True)
@@ -145,8 +148,10 @@ def main():
             generator = G
         else:
             generator = F
-
-        test_images = get_gray_test_loader(root=args.test_image_path, batch_size=config.batch_size, shuffle=False)
+        if args.cartoonizing:
+            test_images = get_test_loader(root=args.test_image_path, batch_size=config.batch_size, shuffle=False)
+        else:    
+            test_images = get_gray_test_loader(root=args.test_image_path, batch_size=config.batch_size, shuffle=False)
         print(test_images)
         image_batch= next(iter(test_images))
         image_batch = image_batch.to(config.device)
@@ -180,8 +185,14 @@ def main():
             D_y = Discriminator(use_bias=args.use_bias).to(device)            
 
         # load dataloaders
-        loader,target_loader = get_gray_train_loader(root=args.photo_image_dir,
+        if args.cartoonizing:
+            loader,target_loader = get_gray_train_loader(root=args.photo_image_dir,
                                        target_root=args.photo_image_target_dir, batch_size=args.batch_size)
+        else:
+            loader,target_loader = get_train_loader(root=args.photo_image_dir,
+                                       target_root=args.photo_image_target_dir, batch_size=args.batch_size)
+        
+            
 
         trainer = Gray_GanTrainer(G, F, D_x, D_y, loader,target_loader ,args.generated_image_save_path,
                                   use_initialization=(args.initialization_epochs > 0),mod=args.Mod,image_test=args.image_test)

@@ -1,4 +1,4 @@
-import os
+import os,sys
 import argparse
 
 import torch
@@ -6,6 +6,7 @@ import torch.nn as nn
 import numpy as np
 from torchvision import models
 from scipy import linalg
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from core.data_loader import get_eval_loader
 try:
     from tqdm import tqdm
