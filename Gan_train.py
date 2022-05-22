@@ -10,6 +10,7 @@ from tqdm import tqdm
 from core.utils import he_init,compute_gradient_penalty
 from torchvision import transforms
 from PIL import Image
+
 class Gray_GanTrainer:
     def __init__(self,G,F,D_x,D_y,data_loader,target_data_loader, generated_image_save_path,
                  lambda_cycle=config.lambda_cycle,lambda_identity=config.lambda_identity,
@@ -21,13 +22,13 @@ class Gray_GanTrainer:
         self.D_x=D_x.to(config.device)
         self.D_y=D_y.to(config.device)
         self.mod=mod
-        
+
         # CycleGan optimizer
         self.G_optimizer = optim.Adam(self.G.parameters(), lr=config.lr, betas=(config.adam_beta1, 0.999))
         self.F_optimizer = optim.Adam(self.F.parameters(), lr=config.lr, betas=(config.adam_beta1, 0.999))
         self.D_x_optimizer = optim.Adam(self.D_x.parameters(), lr=config.lr, betas=(config.adam_beta1, 0.999))
         self.D_y_optimizer = optim.Adam(self.D_y.parameters(), lr=config.lr, betas=(config.adam_beta1, 0.999))
-        
+
         self.lambda_cycle=lambda_cycle
         self.lambda_identity=lambda_identity
         # dataloader
@@ -146,7 +147,7 @@ class Gray_GanTrainer:
                 generate_and_save_images(self.G,self.data_loader,self.generated_image_save_path,self.curr_epoch)
             self.curr_epoch += 1
             if self.curr_epoch%10==0:
-                self.save_checkpoint(os.path.join(save_path, 'checkpoint-epoch-{0}.ckpt'.format(self.curr_epoch_epochs)))
+                self.save_checkpoint(os.path.join(save_path, 'checkpoint-epoch-{0}.ckpt'.format(self.curr_epoch)))
             print("Training Phase [{0}/{1}], {2:.4f} seconds".format(self.curr_epoch, num_epochs, time.time() - start))
 
         # Training finished, save checkpoint

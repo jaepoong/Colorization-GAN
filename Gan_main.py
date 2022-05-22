@@ -185,7 +185,7 @@ def main():
             D_y = Discriminator(use_bias=args.use_bias).to(device)            
 
         # load dataloaders
-        if args.cartoonizing:
+        if not args.cartoonizing:
             loader,target_loader = get_gray_train_loader(root=args.photo_image_dir,
                                        target_root=args.photo_image_target_dir, batch_size=args.batch_size)
         else:
@@ -206,7 +206,10 @@ def main():
                                                             initialization_epochs=args.initialization_epochs,
                                                             save_path=args.model_save_path)
         # 시험용으로 해봄
-        test_images = get_gray_test_loader(root=args.test_image_path, batch_size=config.batch_size, shuffle=False)
+        if not args.cartoonizing:
+            test_images = get_gray_test_loader(root=args.test_image_path, batch_size=config.batch_size, shuffle=False)
+        else:
+            test_images = get_test_loader(root=args.test_image_path, batch_size=config.batch_size, shuffle=False)
         print(test_images)
         image_batch= next(iter(test_images))
         image_batch = image_batch.to(config.device)

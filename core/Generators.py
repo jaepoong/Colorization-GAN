@@ -13,9 +13,16 @@ class Generator(nn.Module):
         self.down3=Conv(64,128,use_bias=self.use_bias,inplace=self.inplace) #32
         self.down4=Conv(128,256,use_bias=self.use_bias,inplace=self.inplace) #16
  
-        self.res1=Conv(256,256,use_bias=self.use_bias,inplace=self.inplace)
+        self.res1=nn.Sequential(
+            nn.Conv2d(256,256,kernel_size=3,stride=1,padding=1,bias=self.use_bias),
+            nn.BatchNorm2d(256,affine=True),
+            nn.ReLU())
     
-        self.res2=Conv(256,256,use_bias=self.use_bias,inplace=self.inplace)
+        self.res2=nn.Sequential(
+            nn.Conv2d(256,256,kernel_size=3,stride=1,padding=1,bias=self.use_bias),
+            nn.BatchNorm2d(256,affine=True),
+            nn.ReLU()
+        )
         
         self.up1_conv=Conv(256,256,use_bias=self.use_bias,inplace=self.inplace) #32
         self.up2_conv=Conv(128,128,use_bias=self.use_bias,inplace=self.inplace) #64
