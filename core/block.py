@@ -24,11 +24,9 @@ class Conv(nn.Module):
         main.append(nn.BatchNorm2d(self.out_channel,affine=True))
         main.append(nn.ReLU(inplace=self.in_channel))
         self.main = nn.Sequential(*main)
-    
+
     def forward(self,input):
         return self.main(input)
-
-
 
 class ResBlk(nn.Module):
     

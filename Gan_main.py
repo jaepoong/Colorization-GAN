@@ -1,5 +1,5 @@
 import wandb
-from core.Generators import Generator,Generator_Mod
+from core.Generators import Generator,Generator_Mod,Generator2
 from core.Discriminator import Discriminator,Discriminator_Mod
 from Gan_train import Gray_GanTrainer
 from config import CycleGANConfig as config
@@ -56,7 +56,7 @@ def get_args():
                         help="if use cartoonizing make it true")
     
     parser.add_argument('--Mod',
-                        default=True)
+                        default=config.mod)
 
     parser.add_argument('--model_path',
                         help='Path to saved model')
@@ -74,7 +74,7 @@ def get_args():
                         help="Path to photo images")
 
     parser.add_argument('--test_image_path',
-                        default=config.test_photo_image_dir,
+                        default=config.test_image_path,
                         help='Path to test photo images')
     
     parser.add_argument('--image_test',
@@ -179,8 +179,8 @@ def main():
             D_y = Discriminator_Mod(use_bias=args.use_bias).to(device)
         
         else:
-            G = Generator(use_bias=args.use_bias).to(device)
-            F = Generator(use_bias=args.use_bias).to(device)
+            G = Generator2(use_bias=args.use_bias).to(device)
+            F = Generator2(use_bias=args.use_bias).to(device)
             D_x = Discriminator(use_bias=args.use_bias).to(device)
             D_y = Discriminator(use_bias=args.use_bias).to(device)            
 
