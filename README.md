@@ -49,3 +49,21 @@ In implementation, i used the 4500 Shinkai Makoto movie frame dataset.
 *example*
 <p align="left"><img width="70%" src="assets/anime.png" /></p>
   
+## Generate Interpolation
+After download dataset, you can train Networks by below implementation.\
+This code have two kinds Network *Base* and *Modified\
+*Base* model consists of U-Net architecture that is inferior than Modified model\
+*Modified" model changed a lot, including instance norm, Wgan loss etc.
+
+*example for train Modified "
+```bash
+ python Gan_main.py --Mod True --model_save_path checkpoints/CycleGAN/ \  ## --model_save_path : save checkpoint at this directory
+                    --cartoonizing True \ ## if true, dataloader receive img and target img dir else img become gray scaled of target img
+                    --generated_image_save_path \ ## --generated_image save_path is the directory that save generated image each epoch
+                    --photo_img_dir \ ##img directory path
+                    --photo_image_target_dir \ ## target image dir path
+                    --initialization_epochs \ ## for stable training, initialize small epochs for train Generator
+                    --num_epochs \ ## i trained colorizing 50 epochs for AFHQ datset
+                    --batch_size \ ## in 12GB vram, i used 6 epochs
+```
+## Evaluation metrics
