@@ -104,3 +104,9 @@ At first, I made same parameter for each base and Modified model.\
 The perfomance of base model was too inferior. The result is below.
 <p align="left"><img width="70%" src="assets/degraduation.png" /></p>
   
+  
+
+## Comment
+This implementation is colorizing & cartoonizing by two model.\
+By this code, User can easily train the nice model for 256 resolution style transfer model.\
+If any question, Please contact tjfwownd@naver.com or issue
