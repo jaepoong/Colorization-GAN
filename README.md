@@ -22,7 +22,7 @@ conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
 # Datasets 
 ## AFHQ
 I provide a script to download afhq datasets. The datasets will be downloaded in the `data` directories.\
-In this code, i used AFHQ for Colorizing
+In this code, I used AFHQ for Colorizing
 
 <b>AFHQ.</b> To download the [AFHQ](https://github.com/clovaai/stargan-v2/blob/master/README.md#animal-faces-hq-dataset-afhq) dataset run the following commands:
 ```bash
@@ -31,20 +31,20 @@ bash download.sh afhq-dataset
 <p align="left"><img width="70%" src="assets/afhq.png" /></p>
 
 ## Landsacpe
-In this code, i used Landscape for original image of cartoonizing\
+In this code, I used Landscape for original image of cartoonizing\
 <b>Landscape.</b> To download the Landscape Dataset please click below link
 
 <b>[Kaggle Landscape Dataset](https://www.kaggle.com/datasets/arnaud58/landscape-pictures)<b>
 <p align="left"><img width="70%" src="assets/landscape.png" /></p>
   
 ## Cartoon Dataset
-For cartooning target Dataset, i made caroon dataset by below code\
+For cartooning target Dataset, I made caroon dataset by below code\
 If you want make custom dataset, please implement below code after download video.
 This code split the video by frame.
 ```bash
 python video_save.py
 ```
-By Copyright, i cant publish Cartoon dataset. If you dont have, i recommend use upright code.
+By Copyright, I cant publish Cartoon dataset. If you dont have, I recommend use upright code.
 In implementation, i used the 4500 Shinkai Makoto movie frame dataset. 
   
 *example*
@@ -88,7 +88,7 @@ In this implementation, Because of many parameters, The FID of base model is a l
 ### Human evaluation  
 In this impementation, after training, because Base FID perfomance was better than Modified model, I surveyed the perfomance of generated images. \
 Despite of many artifacts in base, Low FID of Modified model was not reliable. \
-So i surveyed about output-image by approximately 70 person. \
+So I surveyed about output-image by approximately 70 person. \
 The result show Modified model have high perfomance for human. 
 <p align="left"><img width="70%" src="assets/human_evaluation.png" /></p>
 
@@ -99,7 +99,7 @@ For test the model invariability, I implemented affine transform for cartoonizin
 It show that the Modified model is invariant for affine transform(rotation, cropping etc)
 <p align="left"><img width="70%" src="assets/affine_transform.png" /></p>
   
-### Degraduate
+### Degraduation
 At first, I made same parameter for each base and Modified model.\
 The perfomance of base model was too inferior. The result is below.
 <p align="left"><img width="70%" src="assets/degraduation.png" /></p>
