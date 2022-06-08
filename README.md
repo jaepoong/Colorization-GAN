@@ -67,7 +67,9 @@ This code have two kinds Network *Base* and *Modified\
                     --num_epochs \ ## i trained colorizing 50 epochs for AFHQ datset
                     --batch_size \ ## in 12GB vram, i used 6 epochs
 ```
+  
 ## Evaluation metrics
+### FID
 After training, for evaluate the perfomance of the generating model, You can evaluate the Frechet Inception Distance(FID) by below code.\
 FID evaluates fidelity and diversity of output of the model. (lowwer = good)\
 In this implementation, Because of many parameters, The FID of base model is a little good than Modified model.
@@ -81,3 +83,24 @@ In this implementation, Because of many parameters, The FID of base model is a l
 | |AFHQ Dataset|Cartoon & Landsacpe Dataset|
 |Base Model|15.7|90.6|
 |Modified Model|16.9|91.7|
+
+  
+### Human evaluation  
+In this impementation, after training, because Base FID perfomance was better than Modified model, I surveyed the perfomance of generated images. \
+Despite of many artifacts in base, Low FID of Modified model was not reliable. \
+So i surveyed about output-image by approximately 70 person. \
+The result show Modified model have high perfomance for human. 
+<p align="left"><img width="70%" src="assets/human_evaluation.png" /></p>
+
+## Additional experiments
+
+### Affine transform
+For test the model invariability, I implemented affine transform for cartoonizing.\
+It show that the Modified model is invariant for affine transform(rotation, cropping etc)
+<p align="left"><img width="70%" src="assets/affine_transform.png" /></p>
+  
+### Degraduate
+At first, I made same parameter for each base and Modified model.\
+The perfomance of base model was too inferior. The result is below.
+<p align="left"><img width="70%" src="assets/degraduation.png" /></p>
+  
