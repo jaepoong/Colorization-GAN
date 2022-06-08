@@ -15,6 +15,7 @@ Install dependency:
 conda create -n Colorization-GAN python=3.6.7
 conda activate Colorization-GAN
 pip install requirments.txt
+conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
 ```
 
 
@@ -67,3 +68,16 @@ This code have two kinds Network *Base* and *Modified\
                     --batch_size \ ## in 12GB vram, i used 6 epochs
 ```
 ## Evaluation metrics
+After training, for evaluate the perfomance of the generating model, You can evaluate the Frechet Inception Distance(FID) by below code.\
+FID evaluates fidelity and diversity of output of the model. (lowwer = good)\
+In this implementation, Because of many parameters, The FID of base model is a little good than Modified model.
+
+```bash
+  python metrics/fid.py --paths path1 path2 ## --paths argument need two path for evaluate  
+```
+  
+|FID|Colorizing|Cartoonizing|
+|:---:|:---:|:---:|
+| |AFHQ Dataset|Cartoon & Landsacpe Dataset|
+|Base Model|15.7|90.6|
+|Modified Model|16.9|91.7|
