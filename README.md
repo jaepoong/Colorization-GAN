@@ -21,7 +21,7 @@ conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
 
 # Datasets 
 ## AFHQ
-I provide a script to download afhq datasets. The datasets will be downloaded in the `data` directories.\
+I provide a script to download afhq datasets. The datasets will be downloaded to the `data` directories.\
 In this code, I used AFHQ for Colorizing
 
 <b>AFHQ.</b> To download the [AFHQ](https://github.com/clovaai/stargan-v2/blob/master/README.md#animal-faces-hq-dataset-afhq) dataset run the following commands:
@@ -31,27 +31,27 @@ bash download.sh afhq-dataset
 <p align="left"><img width="70%" src="assets/afhq.png" /></p>
 
 ## Landsacpe
-In this code, I used Landscape for original image of cartoonizing\
-<b>Landscape.</b> To download the Landscape Dataset please click below link
+In this code, I used Landscape for the original image of cartoonizing\
+<b>Landscape.</b> To download the Landscape Dataset please click the below link
 
 <b>[Kaggle Landscape Dataset](https://www.kaggle.com/datasets/arnaud58/landscape-pictures)<b>
 <p align="left"><img width="70%" src="assets/landscape.png" /></p>
   
 ## Cartoon Dataset
-For cartooning target Dataset, I made caroon dataset by below code\
-If you want make custom dataset, please implement below code after download video.
+For cartooning target Dataset, I made cartoon dataset by the below code\
+If you want to make a custom dataset, please implement below code after download video.
 This code split the video by frame.
 ```bash
 python video_save.py
 ```
-By Copyright, I cant publish Cartoon dataset. If you dont have, I recommend use upright code.
-In implementation, i used the 4500 Shinkai Makoto movie frame dataset. 
+By Copyright, I cant publish the Cartoon dataset. If you don`t have one, I recommend useing the upright code.
+In the implementation, I used the 4500 Shinkai Makoto movie frame dataset. 
   
 *example*
 <p align="left"><img width="70%" src="assets/anime.png" /></p>
   
 ## Generate Interpolation
-After download dataset, you can train Networks by below implementation.\
+After downloading dataset, you can train Networks by below implementation.\
 This code have two kinds Network *Base* and *Modified\
 *Base* model consists of U-Net architecture that is inferior than Modified model\
 *Modified" model changed a lot, including instance norm, Wgan loss etc.
@@ -70,8 +70,8 @@ This code have two kinds Network *Base* and *Modified\
   
 ## Evaluation metrics
 ### FID
-After training, for evaluate the perfomance of the generating model, You can evaluate the Frechet Inception Distance(FID) by below code.\
-FID evaluates fidelity and diversity of output of the model. (lowwer = good)\
+After training, for evaluating the performance of the generating model, You can evaluate the Frechet Inception Distance(FID) the below code.\
+FID evaluates fidelity and diversity of output of the model. (lower = good)\
 In this implementation, Because of many parameters, The FID of base model is a little good than Modified model.
 
 ```bash
@@ -86,27 +86,27 @@ In this implementation, Because of many parameters, The FID of base model is a l
 
   
 ### Human evaluation  
-In this impementation, after training, because Base FID perfomance was better than Modified model, I surveyed the perfomance of generated images. \
-Despite of many artifacts in base, Low FID of Modified model was not reliable. \
-So I surveyed about output-image by approximately 70 person. \
-The result show Modified model have high perfomance for human. 
+In this implementation, after training, because Base FID perfomance was better than the Modified model, I surveyed the performance of generated images. \
+Despite many artifacts in the base, the Low FID of the Modified model was not reliable. \
+So I surveyed output-image by approximately 70 people. \
+The result shows Modified model has high performance for human. 
 <p align="left"><img width="70%" src="assets/human_evaluation.png" /></p>
 
 ## Additional experiments
 
 ### Affine transform
-For test the model invariability, I implemented affine transform for cartoonizing.\
-It show that the Modified model is invariant for affine transform(rotation, cropping etc)
+To test the model invariability, I implemented affine transform for cartoonizing.\
+It show that the Modified model is invariant for affine transform(rotation, cropping, etc)
 <p align="left"><img width="70%" src="assets/affine_transform.png" /></p>
   
-### Degraduation
-At first, I made same parameter for each base and Modified model.\
-The perfomance of base model was too inferior. The result is below.
+### Degradation
+At first, I made the same parameter for each base and Modified the model.\
+The performance of the base model was too inferior. The result is below.
 <p align="left"><img width="70%" src="assets/degraduation.png" /></p>
   
   
 
 ## Comment
-This implementation is colorizing & cartoonizing by two model.\
-By this code, User can easily train the nice model for 256 resolution style transfer model.\
-If any question, Please contact tjfwownd@naver.com or issue
+This implementation is colorizing & cartoonizing by two models.\
+By this code, the User can easily train the nice model for the 256 resolution style transfer model.\
+If any questions, please contact tjfwownd@naver.com or issue
