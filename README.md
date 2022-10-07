@@ -88,7 +88,7 @@ In this implementation, Because of many parameters, The FID of base model is a l
 ### Human evaluation  
 In this implementation, after training, because Base FID perfomance was better than the Modified model, I surveyed the performance of generated images. \
 Despite many artifacts in the base, the Low FID of the Modified model was not reliable. \
-So I surveyed output-image by approximately 150 people. \
+So I surveyed output-image by approximately 100 people. \
 The result shows Modified model has high performance for human. 
 <p align="left"><img width="70%" src="assets/human_evaluation.png" /></p>
 
